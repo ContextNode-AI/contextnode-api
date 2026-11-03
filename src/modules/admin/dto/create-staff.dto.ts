@@ -25,3 +25,4 @@ export class CreateStaffDto {
   @IsOptional()
   role?: Role = Role.ADMIN;
 }
+
