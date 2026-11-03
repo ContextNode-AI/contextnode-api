@@ -14,12 +14,29 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get('profile/me')
+  getMyProfile(@CurrentUser('id') userId: string) {
+    return this.usersService.findById(userId);
+  }
+
+  @Patch('profile/me')
+  updateMyProfile(
+    @CurrentUser('id') userId: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    // Only allow updating name, bio, avatar
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { role: _, status: __, plan: ___, ...allowedFields } = updateUserDto;
+    return this.usersService.update(userId, allowedFields);
+  }
 
   @Post()
   @Roles(Role.ADMIN)

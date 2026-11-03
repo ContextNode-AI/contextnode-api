@@ -28,7 +28,28 @@ enum AssetStatus {
   DRAFT
   PENDING_REVIEW
   PUBLISHED
+  REJECTED
   ARCHIVED
+}
+
+enum PromptFamily {
+  CREATIVE
+  DEVELOPMENT
+}
+
+enum PromptType {
+  IMAGE
+  VIDEO
+  DEVELOPMENT
+  CODING
+  CREATIVE
+  PRODUCTIVITY
+  OTHER
+}
+
+enum AccessModel {
+  FREE
+  PAID
 }
 
 model User {
@@ -46,6 +67,7 @@ model User {
   updatedAt    DateTime         @updatedAt
 
   contextPacks  ContextPack[]
+  prompts       Prompt[]         @relation("UserPrompts")
   refreshTokens RefreshToken[]
 
   @@map("users")
@@ -112,4 +134,83 @@ model PackFile {
 
   @@map("pack_files")
 }
+
+model Prompt {
+  id               String        @id @default(uuid())
+  slug             String        @unique
+  title            String
+  shortDescription String
+  fullDescription  String?       @db.Text
+  promptFamily     PromptFamily  @default(CREATIVE)
+  promptType       PromptType    @default(IMAGE)
+  
+  // Core Image Prompt Content
+  prompt           String        @db.Text
+  negativePrompt   String?       @db.Text
+  previewImageUrl  String?
+  previewContent   String?       @db.Text
+
+  // Image Generation Parameters (from context-pack)
+  aiTool           String?       // Midjourney, Flux, Stable Diffusion, DALL-E 3, Ideogram
+  model            String?       // e.g. Midjourney V7, Flux.1 Pro
+  aspectRatio      String?       // e.g. 16:9, 1:1, 4:5, 9:16, 3:2
+  style            String?       // e.g. Product Photography, Cinematic, Photorealistic
+  useCase          String?       // e.g. Product Photography, Social Media, Advertising
+  
+  // Taxonomy & Discovery
+  category         String        // Product, Portrait, Fashion, Architecture, Cinematic, etc.
+  tags             String[]
+  
+  // Variations
+  variations       PromptVariation[]
+
+  // Access & Monetization
+  accessType       AccessModel   @default(FREE)
+  price            Float         @default(0.0)
+  featured         Boolean       @default(false)
+  
+  // Lifecycle & Moderation
+  status           AssetStatus   @default(DRAFT)
+  adminFeedback    String?       @db.Text
+  reviewedById     String?
+  reviewedAt       DateTime?
+
+  // SEO
+  seoTitle         String?
+  seoDescription   String?
+  ogImageUrl       String?
+
+  // Metrics
+  viewsCount       Int           @default(0)
+  downloadsCount   Int           @default(0)
+
+  // Author Link
+  authorId         String
+  author           User          @relation("UserPrompts", fields: [authorId], references: [id], onDelete: Restrict)
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([promptFamily, promptType, status])
+  @@index([category, status])
+  @@map("prompts")
+}
+
+model PromptVariation {
+  id              String   @id @default(uuid())
+  title           String   // e.g. "Front View", "45 Degree Angle"
+  description     String?
+  prompt          String   @db.Text
+  previewImageUrl String?
+  orderIndex      Int      @default(0)
+
+  promptId        String
+  promptRel       Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("prompt_variations")
+}
+
 
