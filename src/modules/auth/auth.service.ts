@@ -22,10 +22,10 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    // Public registration always assigns USER role
+    // Default public UI registration assigns CREATOR role
     const user = await this.usersService.create({
       ...registerDto,
-      role: Role.USER,
+      role: Role.CREATOR,
     });
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);

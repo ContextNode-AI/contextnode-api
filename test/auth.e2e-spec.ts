@@ -80,6 +80,25 @@ describe('Auth & Context Packs (e2e)', () => {
         .expect(401);
     });
 
+    it('POST /api/auth/register (Success - New Creator Account)', async () => {
+      const uniqueEmail = `creator_${Date.now()}@example.com`;
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email: uniqueEmail,
+          password: 'CreatorPassword123!',
+          name: 'Jane Creator',
+        })
+        .expect(201);
+
+      const body = response.body as AuthLoginResponse;
+      expect(body).toHaveProperty('accessToken');
+      expect(body).toHaveProperty('refreshToken');
+      expect(body.user.email).toBe(uniqueEmail);
+      expect(body.user.name).toBe('Jane Creator');
+      expect(body.user.role).toBe('CREATOR');
+    });
+
     it('GET /api/auth/me (Success with Bearer Token)', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/auth/me')

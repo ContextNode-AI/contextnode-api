@@ -26,4 +26,3 @@ export class UpdateUserDto {
   @IsEnum(SubscriptionPlan)
   plan?: SubscriptionPlan;
 }
-

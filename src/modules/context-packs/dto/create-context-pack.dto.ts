@@ -98,4 +98,3 @@ export class CreateContextPackDto {
   @Type(() => PackFileDto)
   files?: PackFileDto[];
 }
-

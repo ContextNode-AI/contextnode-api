@@ -67,4 +67,3 @@ export class UpdateContextPackDto {
   @Type(() => PackFileDto)
   files?: PackFileDto[];
 }
-
