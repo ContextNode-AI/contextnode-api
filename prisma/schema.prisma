@@ -1,0 +1,113 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  CREATOR
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum SubscriptionPlan {
+  FREE
+  PAID
+}
+
+enum AssetStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id           String           @id @default(uuid())
+  email        String           @unique
+  passwordHash String
+  name         String
+  role         Role             @default(USER)
+  status       AccountStatus    @default(ACTIVE)
+  plan         SubscriptionPlan @default(FREE)
+  avatar       String?
+  bio          String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  contextPacks  ContextPack[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model ContextPack {
+  id                  String       @id @default(uuid())
+  slug                String       @unique
+  title               String
+  shortDescription    String
+  fullDescription     String?      @db.Text
+  packVersion         String       @default("v1.0.0")
+  schemaUri           String?
+  targetPersona       String       @default("autonomous-agent")
+  systemPrompt        String       @db.Text
+  goldenRules         String?      @db.Text
+  negativeConstraints String?      @db.Text
+  supportedTools      String[]
+  status              AssetStatus  @default(DRAFT)
+  downloadsCount      Int          @default(0)
+  rating              Float        @default(5.0)
+
+  authorId            String
+  author              User         @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  validationGates     ValidationGate[]
+  files               PackFile[]
+
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@map("context_packs")
+}
+
+model ValidationGate {
+  id            String      @id @default(uuid())
+  gate          String
+  enabled       Boolean     @default(true)
+  contextPackId String
+  contextPack   ContextPack @relation(fields: [contextPackId], references: [id], onDelete: Cascade)
+
+  @@map("validation_gates")
+}
+
+model PackFile {
+  id            String      @id @default(uuid())
+  path          String
+  description   String?
+  fileType      String      @default("markdown")
+  content       String      @db.Text
+  contextPackId String
+  contextPack   ContextPack @relation(fields: [contextPackId], references: [id], onDelete: Cascade)
+
+  @@map("pack_files")
+}
