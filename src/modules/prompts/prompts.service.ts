@@ -20,7 +20,7 @@ import {
 
 @Injectable()
 export class PromptsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   private generateSlug(title: string): string {
     return title
@@ -69,14 +69,14 @@ export class PromptsService {
         tags: restData.tags || [],
         variations: variations?.length
           ? {
-              create: variations.map((v, index) => ({
-                title: v.title,
-                description: v.description,
-                prompt: v.prompt,
-                previewImageUrl: v.previewImageUrl,
-                orderIndex: v.orderIndex ?? index,
-              })),
-            }
+            create: variations.map((v, index) => ({
+              title: v.title,
+              description: v.description,
+              prompt: v.prompt,
+              previewImageUrl: v.previewImageUrl,
+              orderIndex: v.orderIndex ?? index,
+            })),
+          }
           : undefined,
       },
       include: {
@@ -440,3 +440,4 @@ export class PromptsService {
     });
   }
 }
+

@@ -107,3 +107,4 @@ export class UpdateImagePromptDto {
   @IsOptional()
   ogImageUrl?: string;
 }
+

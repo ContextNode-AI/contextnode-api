@@ -10,4 +10,5 @@ import { PrismaModule } from '../../prisma/prisma.module';
   providers: [PromptsService],
   exports: [PromptsService],
 })
-export class PromptsModule {}
+export class PromptsModule { }
+

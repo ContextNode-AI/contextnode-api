@@ -5,6 +5,8 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ContextPacksModule } from './modules/context-packs/context-packs.module';
 import { PromptsModule } from './modules/prompts/prompts.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -16,6 +18,8 @@ import { AppService } from './app.service';
     AuthModule,
     ContextPacksModule,
     PromptsModule,
+    UploadsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -18,7 +18,7 @@ import { Role } from '@prisma/client';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 export class AdminPromptsController {
-  constructor(private readonly promptsService: PromptsService) {}
+  constructor(private readonly promptsService: PromptsService) { }
 
   @Get('pending-review')
   findPendingReview() {
@@ -42,3 +42,4 @@ export class AdminPromptsController {
     return this.promptsService.toggleFeatured(id, featured);
   }
 }
+

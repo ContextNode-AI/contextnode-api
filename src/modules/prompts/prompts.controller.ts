@@ -23,7 +23,7 @@ import { Role, PromptType } from '@prisma/client';
 @Controller('prompts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PromptsController {
-  constructor(private readonly promptsService: PromptsService) {}
+  constructor(private readonly promptsService: PromptsService) { }
 
   @Post('creative/image')
   @Roles(Role.CREATOR, Role.ADMIN)
@@ -92,3 +92,4 @@ export class PromptsController {
     return this.promptsService.findOneBySlug(slug, userId);
   }
 }
+
