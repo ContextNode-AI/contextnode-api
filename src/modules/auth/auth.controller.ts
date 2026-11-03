@@ -61,20 +61,27 @@ export class AuthController {
     @Req() req: Request & { user: any },
     @Res() res: Response,
   ) {
-    const authResult = req.user;
-    if (authResult?.accessToken) {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    try {
+      const authResult = req.user;
+      if (!authResult?.accessToken) {
+        console.error('Google OAuth callback failed: req.user is', req.user);
+        return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+      }
+
       this.setTokenCookies(
         res,
         authResult.accessToken,
         authResult.refreshToken,
       );
-    }
 
-    const frontendUrl =
-      process.env.FRONTEND_URL || 'http://localhost:3000';
-    return res.redirect(
-      `${frontendUrl}?token=${encodeURIComponent(authResult.accessToken)}&oauth=google`,
-    );
+      return res.redirect(
+        `${frontendUrl}?token=${encodeURIComponent(authResult.accessToken)}&oauth=google`,
+      );
+    } catch (error) {
+      console.error('Error in googleAuthCallback:', error);
+      return res.redirect(`${frontendUrl}/login?error=oauth_server_error`);
+    }
   }
 
   @Post('refresh')

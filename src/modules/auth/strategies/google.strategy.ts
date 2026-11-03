@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20';
+import { Strategy, Profile } from 'passport-google-oauth20';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth.service';
 
@@ -28,31 +28,26 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     accessToken: string,
     refreshToken: string,
     profile: Profile,
-    done: VerifyCallback,
-  ): Promise<void> {
+  ): Promise<any> {
     const { id, name, emails, photos } = profile;
     const email = emails?.[0]?.value;
     const displayName =
       name?.givenName && name?.familyName
         ? `${name.givenName} ${name.familyName}`
-      : profile.displayName || email?.split('@')[0] || 'User';
+        : profile.displayName || email?.split('@')[0] || 'User';
     const avatar = photos?.[0]?.value;
 
     if (!email) {
-      done(new Error('No email found from Google account'), undefined);
-      return;
+      throw new UnauthorizedException('No email found from Google account');
     }
 
-    try {
-      const result = await this.authService.validateGoogleUser({
-        googleId: id,
-        email,
-        name: displayName,
-        avatar,
-      });
-      done(null, result);
-    } catch (err) {
-      done(err as Error, undefined);
-    }
+    const result = await this.authService.validateGoogleUser({
+      googleId: id,
+      email,
+      name: displayName,
+      avatar,
+    });
+
+    return result;
   }
 }
