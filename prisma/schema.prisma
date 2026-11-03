@@ -144,18 +144,32 @@ model Prompt {
   promptFamily     PromptFamily  @default(CREATIVE)
   promptType       PromptType    @default(IMAGE)
   
-  // Core Image Prompt Content
+  // Core Content (Image / Video)
   prompt           String        @db.Text
   negativePrompt   String?       @db.Text
-  previewImageUrl  String?
+  previewImageUrl  String?       // Catalog Poster / Image Output
+  previewVideoUrl  String?       // Direct Video MP4 / WebM / Cloudinary URL
   previewContent   String?       @db.Text
 
-  // Image Generation Parameters (from context-pack)
-  aiTool           String?       // Midjourney, Flux, Stable Diffusion, DALL-E 3, Ideogram
-  model            String?       // e.g. Midjourney V7, Flux.1 Pro
-  aspectRatio      String?       // e.g. 16:9, 1:1, 4:5, 9:16, 3:2
-  style            String?       // e.g. Product Photography, Cinematic, Photorealistic
-  useCase          String?       // e.g. Product Photography, Social Media, Advertising
+  // Generation Parameters (Images & Videos from context-pack)
+  aiTool           String?       // Midjourney, Flux, Runway Gen-3, OpenAI Sora, Kling AI, Luma Dream Machine, etc.
+  model            String?       // e.g. Midjourney V7, Gen-3 Alpha Turbo, Kling 1.5
+  aspectRatio      String?       // e.g. 16:9, 9:16, 1:1, 2.39:1, 4:3
+  style            String?       // e.g. Cinematic, Photorealistic, Commercial, Anime
+  useCase          String?       // e.g. Product Photography, Advertising, Music Video, Film
+  
+  // Video-Specific Choreography & Motion Controls
+  duration         String?       // 5s, 10s, 15s, 30s, 60s
+  fps              Int?          // 24, 30, 60, 120
+  motionStrength   Int?          // 1 - 10
+  cameraMovement   String?       // Dynamic Tracking, Pan Left/Right, Orbit 360°, Zoom In, FPV Drone Sweep
+  seed             String?       // Seed or Motion Brush identifier
+  
+  // Keyframe / Image-to-Video References (Optional)
+  firstFrameImageUrl String?
+  firstFramePrompt   String?     @db.Text
+  lastFrameImageUrl  String?
+  lastFramePrompt    String?     @db.Text
   
   // Taxonomy & Discovery
   category         String        // Product, Portrait, Fashion, Architecture, Cinematic, etc.

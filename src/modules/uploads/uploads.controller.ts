@@ -23,12 +23,37 @@ export class UploadsController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB limit
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp|gif|svg)$/i }),
+          new FileTypeValidator({
+            fileType: /(image\/|jpg|jpeg|png|webp|gif|svg)/i,
+            fallbackToMimetype: true,
+          }),
         ],
+        fileIsRequired: true,
       }),
     )
     file: Express.Multer.File,
   ) {
     return this.uploadsService.uploadImage(file);
+  }
+
+  @Public()
+  @Post('video')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadVideo(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 100 * 1024 * 1024 }), // 100MB limit
+          new FileTypeValidator({
+            fileType: /(video\/|mp4|webm|quicktime|mkv)/i,
+            fallbackToMimetype: true,
+          }),
+        ],
+        fileIsRequired: true,
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    return this.uploadsService.uploadVideo(file);
   }
 }

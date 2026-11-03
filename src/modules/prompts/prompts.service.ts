@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateImagePromptDto } from './dto/create-image-prompt.dto';
+import { CreateVideoPromptDto } from './dto/create-video-prompt.dto';
 import { UpdateImagePromptDto } from './dto/update-image-prompt.dto';
 import { ReviewPromptDto, ReviewAction } from './dto/review-prompt.dto';
 import { QueryPromptsDto } from './dto/query-prompts.dto';
@@ -64,6 +65,54 @@ export class PromptsService {
         slug,
         promptFamily: PromptFamily.CREATIVE,
         promptType: PromptType.IMAGE,
+        status: initialStatus,
+        authorId,
+        tags: restData.tags || [],
+        variations: variations?.length
+          ? {
+            create: variations.map((v, index) => ({
+              title: v.title,
+              description: v.description,
+              prompt: v.prompt,
+              previewImageUrl: v.previewImageUrl,
+              orderIndex: v.orderIndex ?? index,
+            })),
+          }
+          : undefined,
+      },
+      include: {
+        variations: {
+          orderBy: { orderIndex: 'asc' },
+        },
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+  }
+
+  async createVideoPrompt(createDto: CreateVideoPromptDto, authorId: string) {
+    const rawSlug = createDto.slug?.trim() || this.generateSlug(createDto.title);
+    const slug = await this.ensureUniqueSlug(rawSlug);
+
+    const { variations, status, ...restData } = createDto;
+
+    const initialStatus =
+      status === AssetStatus.PENDING_REVIEW
+        ? AssetStatus.PENDING_REVIEW
+        : AssetStatus.DRAFT;
+
+    return this.prisma.prompt.create({
+      data: {
+        ...restData,
+        slug,
+        promptFamily: PromptFamily.CREATIVE,
+        promptType: PromptType.VIDEO,
         status: initialStatus,
         authorId,
         tags: restData.tags || [],

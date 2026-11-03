@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { PromptsService } from './prompts.service';
 import { CreateImagePromptDto } from './dto/create-image-prompt.dto';
+import { CreateVideoPromptDto } from './dto/create-video-prompt.dto';
 import { UpdateImagePromptDto } from './dto/update-image-prompt.dto';
 import { QueryPromptsDto } from './dto/query-prompts.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -86,6 +87,80 @@ export class PromptsController {
   @Public()
   @Get('creative/image/:slug')
   findOneBySlug(
+    @Param('slug') slug: string,
+    @CurrentUser('id') userId?: string,
+  ) {
+    return this.promptsService.findOneBySlug(slug, userId);
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // CREATIVE VIDEO PROMPTS (from context-pack)
+  // ══════════════════════════════════════════════════════════════════
+
+  @Post('creative/video')
+  @Roles(Role.CREATOR, Role.ADMIN)
+  createVideoPrompt(
+    @Body() createDto: CreateVideoPromptDto,
+    @CurrentUser('id') authorId: string,
+  ) {
+    return this.promptsService.createVideoPrompt(createDto, authorId);
+  }
+
+  @Get('creative/video/my')
+  @Roles(Role.CREATOR, Role.ADMIN)
+  findMyVideoPrompts(@CurrentUser('id') authorId: string) {
+    return this.promptsService.findMyPrompts(authorId, PromptType.VIDEO);
+  }
+
+  @Get('creative/video/my/:id')
+  @Roles(Role.CREATOR, Role.ADMIN)
+  findMyVideoPromptById(
+    @Param('id') id: string,
+    @CurrentUser('id') authorId: string,
+  ) {
+    return this.promptsService.findMyPromptById(id, authorId);
+  }
+
+  @Patch('creative/video/:id')
+  @Roles(Role.CREATOR, Role.ADMIN)
+  updateMyVideoPrompt(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateImagePromptDto,
+    @CurrentUser() user: { id: string; role: Role },
+  ) {
+    return this.promptsService.updateMyPrompt(id, updateDto, user);
+  }
+
+  @Post('creative/video/:id/submit-review')
+  @Roles(Role.CREATOR, Role.ADMIN)
+  submitVideoForReview(
+    @Param('id') id: string,
+    @CurrentUser('id') authorId: string,
+  ) {
+    return this.promptsService.submitForReview(id, authorId);
+  }
+
+  @Delete('creative/video/:id')
+  @Roles(Role.CREATOR, Role.ADMIN)
+  deleteMyVideoPrompt(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string; role: Role },
+  ) {
+    return this.promptsService.deleteMyPrompt(id, user);
+  }
+
+  @Public()
+  @Get('creative/video')
+  findAllPublicVideos(@Query() query: QueryPromptsDto) {
+    return this.promptsService.findAllPublic({
+      ...query,
+      type: PromptType.VIDEO,
+    });
+  }
+
+  @Public()
+  @Get('creative/video/:slug')
+  findOneVideoBySlug(
     @Param('slug') slug: string,
     @CurrentUser('id') userId?: string,
   ) {
