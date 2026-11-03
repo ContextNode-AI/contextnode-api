@@ -14,6 +14,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { Response, Request } from 'express';
 import type { User } from '@prisma/client';
@@ -46,6 +47,34 @@ export class AuthController {
     const result = await this.authService.login(loginDto);
     this.setTokenCookies(res, result.accessToken, result.refreshToken);
     return result;
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // Triggers Google OAuth2 consent screen
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthCallback(
+    @Req() req: Request & { user: any },
+    @Res() res: Response,
+  ) {
+    const authResult = req.user;
+    if (authResult?.accessToken) {
+      this.setTokenCookies(
+        res,
+        authResult.accessToken,
+        authResult.refreshToken,
+      );
+    }
+
+    const frontendUrl =
+      process.env.FRONTEND_URL || 'http://localhost:3000';
+    return res.redirect(
+      `${frontendUrl}?token=${encodeURIComponent(authResult.accessToken)}&oauth=google`,
+    );
   }
 
   @Post('refresh')

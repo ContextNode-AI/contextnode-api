@@ -43,6 +43,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (!user.passwordHash) {
+      throw new UnauthorizedException(
+        'This account was created with Google OAuth. Please sign in with Google.',
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
       user.passwordHash,
@@ -139,6 +145,61 @@ export class AuthService {
 
   async getMe(userId: string) {
     return this.usersService.findById(userId);
+  }
+
+  async validateGoogleUser(googleProfile: {
+    googleId: string;
+    email: string;
+    name: string;
+    avatar?: string;
+  }) {
+    let user = await this.prisma.user.findUnique({
+      where: { googleId: googleProfile.googleId },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.findUnique({
+        where: { email: googleProfile.email.toLowerCase().trim() },
+      });
+
+      if (user) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            googleId: googleProfile.googleId,
+            avatar: user.avatar || googleProfile.avatar,
+          },
+        });
+      } else {
+        user = await this.prisma.user.create({
+          data: {
+            email: googleProfile.email.toLowerCase().trim(),
+            name: googleProfile.name || googleProfile.email.split('@')[0],
+            googleId: googleProfile.googleId,
+            avatar: googleProfile.avatar,
+            role: Role.CREATOR,
+            status: 'ACTIVE',
+            plan: 'FREE',
+          },
+        });
+      }
+    }
+
+    if (user.status !== 'ACTIVE') {
+      throw new UnauthorizedException(
+        `Account is ${user.status.toLowerCase()}`,
+      );
+    }
+
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
+    await this.saveRefreshToken(user.id, tokens.refreshToken);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash: _, ...safeUser } = user;
+    return {
+      user: safeUser,
+      ...tokens,
+    };
   }
 
   private async generateTokens(userId: string, email: string, role: string) {

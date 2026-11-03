@@ -34,9 +34,10 @@ enum AssetStatus {
 model User {
   id           String           @id @default(uuid())
   email        String           @unique
-  passwordHash String
+  passwordHash String?
+  googleId     String?          @unique
   name         String
-  role         Role             @default(USER)
+  role         Role             @default(CREATOR)
   status       AccountStatus    @default(ACTIVE)
   plan         SubscriptionPlan @default(FREE)
   avatar       String?
