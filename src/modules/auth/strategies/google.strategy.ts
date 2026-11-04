@@ -19,7 +19,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         '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',
       callbackURL:
         configService.get<string>('GOOGLE_CALLBACK_URL') ||
-        'http://localhost:3001/api/auth/google/callback',
+        (process.env.NODE_ENV === 'production'
+          ? 'https://api.contextnode.in/api/auth/google/callback'
+          : 'http://localhost:3001/api/auth/google/callback'),
       scope: ['email', 'profile'],
     });
   }
@@ -29,25 +31,30 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     refreshToken: string,
     profile: Profile,
   ): Promise<any> {
-    const { id, name, emails, photos } = profile;
-    const email = emails?.[0]?.value;
-    const displayName =
-      name?.givenName && name?.familyName
-        ? `${name.givenName} ${name.familyName}`
-        : profile.displayName || email?.split('@')[0] || 'User';
-    const avatar = photos?.[0]?.value;
+    try {
+      const { id, name, emails, photos } = profile;
+      const email = emails?.[0]?.value;
+      const displayName =
+        name?.givenName && name?.familyName
+          ? `${name.givenName} ${name.familyName}`
+          : profile.displayName || email?.split('@')[0] || 'User';
+      const avatar = photos?.[0]?.value;
 
-    if (!email) {
-      throw new UnauthorizedException('No email found from Google account');
+      if (!email) {
+        throw new UnauthorizedException('No email found from Google account');
+      }
+
+      const result = await this.authService.validateGoogleUser({
+        googleId: id,
+        email,
+        name: displayName,
+        avatar,
+      });
+
+      return result;
+    } catch (err) {
+      console.error('[GoogleStrategy] validate error:', err);
+      throw err;
     }
-
-    const result = await this.authService.validateGoogleUser({
-      googleId: id,
-      email,
-      name: displayName,
-      avatar,
-    });
-
-    return result;
   }
 }
