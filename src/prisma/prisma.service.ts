@@ -7,6 +7,16 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  constructor() {
+    let dbUrl = process.env.DATABASE_URL || '';
+    if (dbUrl && !dbUrl.includes('schema=')) {
+      dbUrl += (dbUrl.includes('?') ? '&' : '?') + 'schema=contextnode';
+    }
+    super({
+      datasources: dbUrl ? { db: { url: dbUrl } } : undefined,
+    });
+  }
+
   async onModuleInit() {
     await this.$connect();
     await this.seedSuperAdmin();
