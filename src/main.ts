@@ -36,8 +36,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const port = process.env.PORT ?? 3001;
-  await app.listen(port);
-  console.log(`🚀 ContextNode API is running on http://localhost:${port}/api`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 ContextNode API is running on port ${port} (environment: ${process.env.NODE_ENV || 'development'})`);
 }
 
 void bootstrap();
